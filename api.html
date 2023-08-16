@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filmes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+        <link rel="stylesheet" href="api.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Filmes</h1>
+        <div class="mb-4">
+            <label for="categorias" class="form-label">Categoria:</label>
+            <select id="categorias" class="form-select smaller-select">
+                <option value="popularity.desc">Populares</option>
+                <option value="vote_average.desc">Melhor Avaliados</option>
+                <option value="release_date.desc">Próximos</option>
+            </select>
+        </div>
+        <div id="filmes" class="row"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd80VXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
+    <script>
+        const apiKey = "24a4cef5b7adadeaea7050696923b650";
+        const endPoint = "https://api.themoviedb.org/3/discover/movie?api_key=" + apiKey;
+
+        const selecionarCategorias = document.getElementById("categorias");
+        const divFilmes = document.getElementById("filmes");
+
+        selecionarCategorias.addEventListener("change", async () =>{
+            const categoriaSelecionada = selecionarCategorias.value;
+            const endPointCategoria = `${endPoint}&sort_by=${categoriaSelecionada}`;
+
+            try {
+                divFilmes.innerHTML = `<div class="text-center"><img src="loading.gif" alt="Carregando..."></div>`;
+
+                const filmes = await getDadosAPI(endPointCategoria);
+                mostrarValores(filmes);
+            } catch(error) {
+                console.error("Erro ao obter dados da API: ", error);
+                divFilmes.innerHTML = "<div class='text-center text-danger'>Erro ao carregar filmes.</div>";
+            }
+        });
+
+        async function getDadosAPI(endPoint){
+            try{
+                const res = await fetch(endPoint);
+                const data = await res.json();
+                const filmes = data.results;
+                return filmes;
+            } catch(error) {
+                throw error;
+            }
+        }
+
+        function mostrarValores(filmes){
+            divFilmes.innerHTML = "";
+
+            filmes.forEach(filme => {
+                const filmeHTML = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card" style="width: 18rem;">
+                            <img src="https://image.tmdb.org/t/p/w500/${filme.poster_path}" class="card-img-top" alt="${filme.title}">
+                            <div class="card-body">
+                                <h5 class="card-title">${filme.title}</h5>
+                                <p class="card-text">${filme.overview}</p>
+                                <p class="card-text">Avaliação: ${filme.vote_average}</p>
+                                <p class="card-text">Data de Lançamento: ${filme.release_date}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                divFilmes.insertAdjacentHTML("beforeend", filmeHTML);
+            });
+        }
+
+        getDadosAPI(endPoint + "&sort_by=popularity.desc")
+        .then(filmes => mostrarValores(filmes))
+        .catch(error => console.error("Erro ao obter dados da API: ", error));
+    </script>
+</body>    
+</html>
